@@ -1,7 +1,11 @@
 package optics.poly
 
+import optics.poly.Traversal
 import optics.internal.focus.{FocusImpl, AppliedFocusImpl}
+import optics.internal.focus.FocusImpl
 import optics.internal.Applicative
+import optics.internal.focus.features.project.ProjectCaptureImpl
+import optics.internal.focus.features.project.EmbeddedOptic
 
 object Focus {
 
@@ -40,10 +44,17 @@ object Focus {
   extension [A] (opt: Option[A])
     def some: A = scala.sys.error("Extension method 'some' should only be used within the optics.poly.Focus macro.")
 
-  def apply[From] = new MkFocus[From]
+  extension [A, B, O](a: A)
+    def embed(o: EmbeddedOptic[A, B, O]): B = scala.sys.error("Extension method 'embed' should only be used within the optics.poly.Focus macro.")
+
+  // Phase-1
+  extension [A, B] (a: A)
+    transparent inline def project(inline get: A => B) = ${ ProjectCaptureImpl('a, 'get) }
 
   class MkFocus[From] {
     transparent inline def apply[To](inline lambda: (From => To)): Any = 
       ${ FocusImpl('lambda) }
   }
+
+  def apply[A]: MkFocus[A] =  new MkFocus[A]
 }

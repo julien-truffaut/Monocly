@@ -2,6 +2,7 @@ package optics.internal.focus
 
 import optics.internal.focus.features.fieldselect.FieldSelectGenerator
 import optics.internal.focus.features.optionsome.OptionSomeGenerator
+import optics.internal.focus.features.project.EmbeddedGenerator
 import optics.poly.{Lens, Iso, Prism, Optional}
 import scala.quoted.Type
 
@@ -10,6 +11,7 @@ private[focus] trait AllGenerators
   extends FocusBase
   with FieldSelectGenerator 
   with OptionSomeGenerator
+  with EmbeddedGenerator
 
 private[focus] trait GeneratorLoop {
   this: FocusBase with AllGenerators => 
@@ -18,7 +20,7 @@ private[focus] trait GeneratorLoop {
 
   def generateCode[From: Type](actions: List[FocusAction]): FocusResult[Term] = {
     val idOptic: FocusResult[Term] = Right('{Iso.id[From]}.asTerm)
-    
+
     actions.foldLeft(idOptic) { (resultSoFar, action) => 
       resultSoFar.flatMap(term => composeOptics(term, generateActionCode(action)))
     }
@@ -28,6 +30,7 @@ private[focus] trait GeneratorLoop {
     action match {
       case FocusAction.FieldSelect(name, fromType, fromTypeArgs, toType) => generateFieldSelect(name, fromType, fromTypeArgs, toType)
       case FocusAction.OptionSome(toType) => generateOptionSome(toType)
+      case FocusAction.EmbeddedOptic(_, _, opticExpr) => generateEmbedded(opticExpr)
     }
 
   private def composeOptics(lens1: Term, lens2: Term): FocusResult[Term] = {

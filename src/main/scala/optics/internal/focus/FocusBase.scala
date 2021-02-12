@@ -12,10 +12,13 @@ private[focus] trait FocusBase {
   enum FocusAction {
     case FieldSelect(name: String, fromType: TypeRepr, fromTypeArgs: List[TypeRepr], toType: TypeRepr)
     case OptionSome(toType: TypeRepr)
+    case EmbeddedOptic(toType: TypeRepr, opticType: TypeRepr, opticExpr: Term)
 
     override def toString(): String = this match {
       case FieldSelect(name, fromType, fromTypeArgs, toType) => s"FieldSelect($name, ${fromType.show}, ${fromTypeArgs.map(_.show).mkString("[", ",", "]")}, ${toType.show})"
       case OptionSome(toType) => s"OptionSome(${toType.show})"
+      // The embedded expression is typically enormous...
+      case EmbeddedOptic(toType, opticType, _) => s"EmbeddedOptic(${toType.show}, ${opticType.show}, ...)"
     }
   }
 
